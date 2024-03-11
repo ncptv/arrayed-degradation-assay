@@ -1,0 +1,11 @@
+The licenses for the libraries used within this repo.
+-----------------------------------------------------
+https://numpy.org/doc/stable/dev/governance/governance.html#license
+https://github.com/scipy/scipy/blob/main/LICENSE.txt AND https://github.com/scipy/scipy/blob/main/LICENSES_bundled.txt 
+https://tqdm.github.io/licence/
+https://github.com/pandas-dev/pandas/blob/main/LICENSE
+https://github.com/scikit-learn/scikit-learn/blob/main/COPYING
+https://github.com/plotly/plotly.js/blob/master/LICENSE
+https://github.com/python-pillow/Pillow/blob/main/LICENSE
+https://github.com/plotly/Kaleido/blob/master/LICENSE.txt 
+
