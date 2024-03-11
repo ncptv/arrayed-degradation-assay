@@ -61,7 +61,7 @@ With the command above you will run the analysis; script will search for the inp
 python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1000 --max_peak 1500 --remove_background --width_param 0.7
 ```
 
-Difference here is that now script will search for control peak and normalize electropherograms traces with respect to them. Peak bounds are not provided so script will use default bounds (235, 310). Additionally, script will remove backgroud from the target peak by drawing a line a base of the peak (keep in mind that it might not work well for certain cases like migrating peaks). Finally, script will try to make peaks bounds more narrow by decreasing `width_param` from default 0.85 into 0.7.
+Difference here is that now script will search for control peak and normalize electropherograms traces with respect to them. Peak bounds are not provided so script will use default bounds (235, 310) for p4p6 control sequence. Additionally, script will remove backgroud from the target peak by drawing a line a base of the peak (keep in mind that it might not work well for certain cases like migrating peaks, so use this argument with caution and double check if areas are correctly determined in results.pdf). Finally, script will try to make peaks bounds more narrow because of decreasing `width_param` from default 0.85 into 0.7.
 
 # Input data format
 
