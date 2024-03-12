@@ -3,19 +3,19 @@ import typing as tp
 import numpy as np
 import pandas as pd
 
-from arrayed_degradation.decay_curve import (
+from decay_curve import (
     estimate_half_life,
     estimate_half_life_per_replicate,
 )
-from arrayed_degradation.input_data import (
+from input_data import (
     EPG,
 )
-from arrayed_degradation.peaks import (
+from peaks import (
     compute_peak_bounds,
     get_peak_area,
     normalize_trace_wrt_control,
 )
-from arrayed_degradation.plots import (
+from plots import (
     Plotter,
 )
 

@@ -5,14 +5,14 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from arrayed_degradation.analyze_single_rna import (
+from analyze_single_rna import (
     analyze_single_rna,
 )
-from arrayed_degradation.input_data import (
+from input_data import (
     process_input_data,
 )
-from arrayed_degradation.log import LOGGER
-from arrayed_degradation.results import process_results
+from log import LOGGER
+from results import process_results
 
 
 def analyze_experiment(

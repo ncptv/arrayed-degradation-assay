@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-from arrayed_degradation.log import LOGGER
-from arrayed_degradation.plots import (
+from log import LOGGER
+from plots import (
     plot_summary_chart,
 )
 

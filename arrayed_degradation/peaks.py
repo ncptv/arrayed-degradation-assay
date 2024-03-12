@@ -2,10 +2,10 @@ import numpy as np
 import numpy.typing as npt
 from scipy.signal import find_peaks
 
-from arrayed_degradation.exceptions import (
+from exceptions import (
     PeakOutOfBoundsError,
 )
-from arrayed_degradation.input_data import EPG
+from input_data import EPG
 
 
 def compute_peak_bounds(
