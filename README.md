@@ -5,13 +5,13 @@ The purpose of this code is to analyse the data for RNA stability assay.
 
 # Requirements
 
-First clone the code repository from git into your machine.
+First clone the code repository from github into your machine via git. If you don't have git you can download it from [here](https://github.com/git-guides/install-git). If you don't want to install it, just download the .zip file containing code for this repo (you can do it by clicking on blue `<>Code` button on main page of this repo, and then `Download ZIP`).
 
 [Install Python 3.10](https://docs.python.org/3.10/using/windows.html), if it isn’t installed there yet.
 
 This script requires several standard computational libraries like `numpy`, `pandas`, `sklearn` and `scipy`, as well as `plotly` and `PIL` for visualizations. You will find all of them in `requirements.txt` file.
 
-In order to install them enter into a directory with your code and run:
+In order to install them enter into a directory with your code and install it via pip. Here are commands to do that:
 
 ```sh
 cd arrayed-degradation-assay
@@ -85,7 +85,7 @@ my_experiment_dir
     └── plate_map.csv
 ```
 
-In this example we have a separate directory for our experiment called `my_experiment_dir` (you can of course name it differently). Within that directory we have 3 directories for 3 of our plates (`my_plate_1`, `my_plate_2`, etc..; again names can be different) that were used in the experiment. Within each plate's directory we must have 2 files named **exactly** `plate_map.csv`, `epg.csv`.
+In this example we have a separate directory for our experiment called `my_experiment_dir` (you can of course name it differently). Within that directory we have 3 directories for 3 of our plates (`my_plate_1`, `my_plate_2`, etc..; again names can be different) that were used in the experiment. Within each plate's directory we **must have** 2 files named **exactly** `plate_map.csv`, `epg.csv`.
 
 Please do not create any additional directories within experiment folder as the script will break. Additional files (like the ones with results) are okay.
 
@@ -102,7 +102,7 @@ There are two obligatory input files in order to read data for a given plate:
     004_TP0,005_TP0,006_TP0,004_TP0,005_TP3,006_TP3
     ```
 
-    In this example in well `A3` we have a sample with label `003_TP0` which represent RNA having ID `003` and run at timepoint `0`h. At well `A6` there is a sample labeled as `003_TP3` which is the same RNA but run at timepoint `3`h. The sample labels should have this format `{rna_id}_TP{timepoint}`, where `rna_id` is your custom design identifier, and `timepoint` can be intiger or float number (examples: `0`, `1`, `3.5`, `3.333`) that determines timepoints used **in hours**. Do not add any additional suffixes as the script might not recognize RNA and timepoint properly.
+    In this example in well `A3` we have a sample with label `003_TP0` which represent RNA having ID `003` and run at timepoint `0`h. At well `A6` there is a sample labeled as `003_TP3` which is the same RNA but run at timepoint `3`h. The sample labels should have this format **`{rna_id}_TP{timepoint}`**, where `rna_id` is your custom design identifier, and `timepoint` can be intiger or float number (examples: `0`, `1`, `3.5`, `3.333`) that determines timepoints used **in hours**. Do not add any additional suffixes as the script might not recognize RNA and timepoint properly. For each RNA and each technical replicate you must have sample with timepoint 0. Replicates of the same RNA - timepoint pair within one plate or across plates are acceptable. There are no strict layout requirements or assumptions for plating your samples, meaning that you can order them as you wish. Plate maps files do not need to be the same for all of your plates. However, it is adviced to think of physically distinct plates as technical replicates (so exact copies of each other) and design your experiment to follow this pattern.
 
     **Missing wells** within plate map are acceptable, so if you don't want to include specifc RNA - timepoint pair on a particular plate in the analysis just remove it from the platemap and leave cell empty. Keep in mind though that you shoud not drop timepoint 0 as it might lead to inproper results (we use timepoint 0 as a reference/baseline point for remaining timepoints). If you really want to remove timepoint 0 please remove as well all the others timepoint that are paired with it.
 
@@ -132,3 +132,14 @@ After the analysis is run you will be provided with two result files that will b
 
 - `result.csv` - CSV containing a table with RNA ids, half life, decay rate, standard deviations and other metrics.
 - `results.pdf` - PDF containing plots with analysis details like sample traces, decay curve, summary plots etc..
+
+# Toy example
+
+In the repo you can find a working toy example to run the code. You can also crosscheck whether your experiment that you want to run has consistent format.
+Data for running as well as expected results are within `data` directory. Electropherograms contain control peaks for normalization.
+
+You can run it by executing:
+
+```sh
+python arrayed_degradation/analyze_experiment.py --min_peak 600 --max_peak 2500 --data_dir_path data 
+```
