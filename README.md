@@ -104,9 +104,11 @@ There are two obligatory input files in order to read data for a given plate:
 
     In this example in well `A3` we have a sample with label `003_TP0` which represent RNA having ID `003` and run at timepoint `0`h. At well `A6` there is a sample labeled as `003_TP3` which is the same RNA but run at timepoint `3`h. The sample labels should have this format `{rna_id}_TP{timepoint}`, where `rna_id` is your custom design identifier, and `timepoint` can be intiger or float number (examples: `0`, `1`, `3.5`, `3.333`) that determines timepoints used **in hours**. Do not add any additional suffixes as the script might not recognize RNA and timepoint properly.
 
-    Missing wells within plate map are acceptable, so if you don't want to include specifc RNA - timepoint pair on a particular plate in the analysis just remove it from the platemap and leave cell empty. Keep in mind though that you shoud not drop timepoint 0 as it might lead to inproper results (we use timepoint 0 as a reference/baseline point for remaining timepoints).
+    **Missing wells** within plate map are acceptable, so if you don't want to include specifc RNA - timepoint pair on a particular plate in the analysis just remove it from the platemap and leave cell empty. Keep in mind though that you shoud not drop timepoint 0 as it might lead to inproper results (we use timepoint 0 as a reference/baseline point for remaining timepoints). If you really want to remove timepoint 0 please remove as well all the others timepoint that are paired with it.
 
-    Do not add any rows or column names in `plate_map.csv`; those will be added internaly by the script during data processing. Adding that will cause incorrect well assignment by frameshifting and nonsense results as consequence.
+    **Do not** add any other labels within platemap besides actual samples. If your platemap contains ladder please remove it and leave the cell empty.
+    
+    **Do not** add any rows or column names in `plate_map.csv`; those will be added internaly by the script during data processing. Adding that will cause incorrect well assignment by frameshifting and nonsense results as a consequence.
 
     Script will inform you in the logs how many unique RNA ids, replicates and timepoints have been detected. Please double check if the numbers matches your expectations.
 

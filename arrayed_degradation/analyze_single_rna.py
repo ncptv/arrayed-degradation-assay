@@ -92,8 +92,8 @@ def analyze_single_rna(
                 timepoint,
                 left_bound,
                 right_bound,
-                control_peak_min,
-                control_peak_max,
+                control_peak_min if not disable_control_peak else None,
+                control_peak_max if not disable_control_peak else None,
                 replicate,
                 remove_background,
             )
