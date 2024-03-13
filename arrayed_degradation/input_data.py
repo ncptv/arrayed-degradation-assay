@@ -118,11 +118,17 @@ def process_input_data(data_dir_path: Path) -> pd.DataFrame:
 
     plate_paths = glob(str(data_dir_path / "*"))
     plate_dir_paths = [Path(i) for i in plate_paths if Path(i).is_dir()]
-    LOGGER.info(f"Found these files in the data directory: {plate_dir_paths}")
+    LOGGER.info(
+        f"Found these plate subdirectories in the data directory: {[str(i) for i in plate_dir_paths]}"
+    )
 
     plates_data = []
     for plate_path in plate_dir_paths:
-        plates_data.append(process_plate(Path(plate_path)))
+        try:
+            plates_data.append(process_plate(Path(plate_path)))
+        except FileNotFoundError as e:
+            LOGGER.error(f"Error while processing plate {plate_path}: {e}")
+            LOGGER.error(f"Skipping plate {plate_path}.")
 
     data = pd.concat(plates_data)
     data.loc[:, "replicate"] = data.groupby(["rna_id", "timepoint"])[
