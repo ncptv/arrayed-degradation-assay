@@ -1,5 +1,6 @@
 import typing as tp
 from io import BytesIO
+import logging
 
 import numpy as np
 import numpy.typing as npt
@@ -10,6 +11,7 @@ import plotly.io as pio  # type: ignore[import]
 from PIL import Image
 
 pio.templates.default = "plotly_dark"
+logging.getLogger("PIL").setLevel(logging.WARNING)  # removing PIL debug messages
 
 PLOTLY_SCALE = 2
 COLOR_OPTIONS = [

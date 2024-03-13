@@ -7,13 +7,14 @@ The purpose of this code is to analyse the data for RNA stability assay.
 
 First clone the code repository from git into your machine.
 
-[Install Python](https://docs.python.org/3/using/windows.html), if it isn’t installed there yet.
+[Install Python 3.10](https://docs.python.org/3.10/using/windows.html), if it isn’t installed there yet.
 
 This script requires several standard computational libraries like `numpy`, `pandas`, `sklearn` and `scipy`, as well as `plotly` and `PIL` for visualizations. You will find all of them in `requirements.txt` file.
 
 In order to install them enter into a directory with your code and run:
 
 ```sh
+cd arrayed-degradation-assay
 pip install -r requirements.txt
 ```
 
@@ -47,18 +48,18 @@ Optional arguments:
 
 ## Examples
 
-### Example 1 - simple run without control peak and target peak between 1000 and 1500 nts
+### Example 1 - simple run without control peak and target peak between 1500 and 2000 nts
 
 ```sh
-python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1000 --max_peak 1500 --disable_control_peak
+python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1500 --max_peak 2000 --disable_control_peak
 ```
 
-With the command above you will run the analysis; script will search for the input data within `data` folder (that is a relative path to the directory with the data; but you can also provide absolute path as well); target peak will be searched within **1000 - 1500** nucleotides window on electropherograms. Script **will not use control peak** for normalization.
+With the command above you will run the analysis; script will search for the input data within `data` folder (that is a relative path to the directory with the data; but you can also provide absolute path as well); target peak will be searched within **1500 - 2000** nucleotides window on electropherograms. Script **will not use control peak** for normalization.
 
 ### Example 2 - run with (1) control peak, (2) target peak background removal and (3) narrower peaks
 
 ```sh
-python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1000 --max_peak 1500 --remove_background --width_param 0.7
+python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1500 --max_peak 2000 --remove_background --width_param 0.7
 ```
 
 Difference here is that now script will search for control peak and normalize electropherograms traces with respect to them. Peak bounds are not provided so script will use default bounds (235, 310) for p4p6 control sequence. Additionally, script will remove backgroud from the target peak by drawing a line a base of the peak (keep in mind that it might not work well for certain cases like migrating peaks, so use this argument with caution and double check if areas are correctly determined in results.pdf). Finally, script will try to make peaks bounds more narrow because of decreasing `width_param` from default 0.85 into 0.7.
@@ -83,7 +84,7 @@ There are two obligatory input files in order to run the script:
 
     ```
     001_TP0,002_TP0,003_TP0,001_TP3,002_TP3,003_TP3
-    004_TP0,005_TP0,006_TP0,004_TP0,005_TP3,006_TP3
+    004_TP0,005_TP0,006_TP0,004_TP3,005_TP3,006_TP3
     ```
 
     In this example in well `A3` we have a sample with label `003_TP0` which represent RNA having ID `003` and run at timepoint `0`h. At well `A6` there is a sample labels ad `003_TP3` which is the same RNA but run at timepoint `3`h. The sample labels should have this format `{rna_id}_TP{timepoint}`, where `rna_id` can be only digits (no letters, no special characters!), and `timepoint` can be intiger or float number (examples: `0`, `1`, `3.5`, `3.333`) that determines timepoints used **in hours**. Do not add any additional prefixes or suffixes as the script might not recognize RNA and timepoint properly.
@@ -98,7 +99,7 @@ There are two obligatory input files in order to run the script:
 
     Files needs to be named with this convention `epg_{i}.csv` where i are following numbers indicating replicate number. So for 4 replicates you should have `epg_0.csv`, `epg_1.csv`, `epg_2.csv`, `epg_3.csv`
 
-    Here is a simplified example of what a proper plate_map file should look like:
+    Here is a simplified example of what a proper epg file should look like:
 
     ```csv
     Size (nt),"A1: SampA1","A2: SampA2","A3: SampA3"

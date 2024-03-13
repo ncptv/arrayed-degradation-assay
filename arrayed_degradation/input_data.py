@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from arrayed_degradation.exceptions import LackOfTP0Error
-from arrayed_degradation.log import LOGGER
+from exceptions import LackOfTP0Error
+from log import LOGGER
 
 
 @dataclass
