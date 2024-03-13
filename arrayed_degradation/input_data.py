@@ -1,12 +1,12 @@
 import re
 import string
 from dataclasses import dataclass
+from glob import glob
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from exceptions import LackOfTP0Error
 from log import LOGGER
 
 
@@ -27,14 +27,14 @@ def process_plate_map(plate_map: pd.DataFrame) -> pd.DataFrame:
 
     Example of processing.
     Input:
-    0001_TP0  0002_TP0
-    0001_TP3  0002_TP3
+    0001_TP0  0001_TP0
+    0001_TP3  0001_TP3
     Output:
-    rna_id  timepoint  well
-    0001    0          A1
-    0002    0          A2
-    0001    3          B1
-    0002    3          B2
+    rna_id  timepoint  well   inplate_replicate
+    0001    0          A1     0
+    0001    0          A2     1
+    0001    3          B1     0
+    0001    3          B2     1
     """
 
     LOGGER.info("Processing plate map...")
@@ -56,7 +56,7 @@ def process_plate_map(plate_map: pd.DataFrame) -> pd.DataFrame:
     plate_map["timepoint"] = plate_map.sample_id.str.extract(
         r"TP(\d+(?:\.\d+)?)"
     ).astype(float)
-    plate_map["rna_id"] = plate_map.sample_id.str.extract(r"(\d+)_TP")
+    plate_map["rna_id"] = plate_map.sample_id.str.extract(r"(.+)_TP")
     # drop empty wells
     empty_wells = plate_map.well.loc[
         plate_map[["timepoint", "rna_id"]].isna().any(axis=1)
@@ -69,8 +69,12 @@ def process_plate_map(plate_map: pd.DataFrame) -> pd.DataFrame:
         )
         plate_map = plate_map.dropna(subset=["timepoint", "rna_id"])
 
-    plate_map = plate_map.sort_values(["rna_id", "timepoint"])
-    return plate_map[["rna_id", "timepoint", "well"]].reset_index(drop=True)
+    plate_map = plate_map.sort_values(["rna_id", "timepoint", "well"])
+    plate_map.loc[:, "inplate_replicate"] = plate_map.groupby("sample_id").cumcount()
+
+    return plate_map[["rna_id", "timepoint", "well", "inplate_replicate"]].reset_index(
+        drop=True
+    )
 
 
 def process_epgs(epgs: pd.DataFrame) -> dict[str, EPG]:
@@ -89,50 +93,52 @@ def process_epgs(epgs: pd.DataFrame) -> dict[str, EPG]:
     ).to_dict()
 
 
-def process_input_data(plate_map_path: Path, epgs_paths: list[Path]) -> pd.DataFrame:
+def process_plate(plate_path: Path):
+    plate_map_path = plate_path / "plate_map.csv"
+    epg_path = plate_path / "epg.csv"
     if not plate_map_path.exists():
-        raise FileNotFoundError(f"Plate map file not found: {plate_map_path}")
-    for epgs_path in epgs_paths:
-        if not epgs_path.exists():
-            raise FileNotFoundError(f"EPG file not found: {epgs_path}")
+        raise FileNotFoundError(f"Plate map file {plate_map_path} does not exist.")
+    if not epg_path.exists():
+        raise FileNotFoundError(f"EPG files {epg_path} do not exist.")
 
     # process plate map
     plate_map = pd.read_csv(plate_map_path, header=None)
     plate_map = process_plate_map(plate_map)
+    plate_map.loc[:, "plate_id"] = plate_path.name
 
-    # process epgs; each EPG file should represent one replicate
-    replicate_epgs: list[dict[str, EPG]] = []
-    for epg_path in epgs_paths:
-        epgs = pd.read_csv(epg_path)
-        epgs = process_epgs(epgs)
-        replicate_epgs.append(epgs)
+    epgs = pd.read_csv(epg_path)
+    epgs = process_epgs(epgs)
 
-    # merge plate map with epgs into one df
-    # duplicate plate map for each replicate and concatenate
-    data = pd.concat(
-        [plate_map.assign(replicate=i) for i in range(len(replicate_epgs))]
+    return plate_map.assign(epg_raw=plate_map.apply(lambda x: epgs[x.well], axis=1))
+
+
+def process_input_data(data_dir_path: Path) -> pd.DataFrame:
+    if not data_dir_path.exists():
+        raise FileNotFoundError(f"Data directory {data_dir_path} does not exist.")
+
+    plate_paths = glob(str(data_dir_path / "*"))
+    plate_dir_paths = [Path(i) for i in plate_paths if Path(i).is_dir()]
+    LOGGER.info(f"Found these files in the data directory: {plate_dir_paths}")
+
+    plates_data = []
+    for plate_path in plate_dir_paths:
+        plates_data.append(process_plate(Path(plate_path)))
+
+    data = pd.concat(plates_data)
+    data.loc[:, "replicate"] = data.groupby(["rna_id", "timepoint"])[
+        ["plate_id", "inplate_replicate"]
+    ].cumcount()
+    data = (
+        data[["rna_id", "timepoint", "replicate", "epg_raw"]]
+        .sort_values(["rna_id", "timepoint", "replicate"])
+        .reset_index(drop=True)
     )
-    # collect EPG for each well found on the plate map
-    data["epg_raw"] = data.apply(lambda x: replicate_epgs[x.replicate][x.well], axis=1)
-    data = data.sort_values(["rna_id", "replicate", "timepoint"]).reset_index(drop=True)
 
-    n_replicate = data.replicate.nunique()
+    replicates = set(data.groupby("rna_id")["replicate"].nunique())
     n_rna = data.rna_id.nunique()
-    timepoints = data.timepoint.unique()
-    n_timepoints = len(timepoints)
+    timepoints = set(data.timepoint.unique())
     LOGGER.info(
-        f"""Detected {n_rna} unique RNA ids, {n_replicate} replicates and {[str(i) + "h" for i in timepoints]} timepoints."""
+        f"""Detected {n_rna} unique RNA ids, {replicates} replicates and {set(str(i) + "h" for i in timepoints)} timepoints."""
     )
-    expected_n_rows = n_rna * n_replicate * n_timepoints
-    if expected_n_rows != data.shape[0]:
-        LOGGER.warning(
-            f"Detected {data.shape[0]} rows in the input data, but expected {n_rna} x {n_replicate} x {n_timepoints} "
-            f"= {expected_n_rows} rows. Check if the input data is correct."
-        )
-    if data.loc[data.timepoint == 0].shape[0] != n_rna * n_replicate:
-        raise LackOfTP0Error(
-            f"Detected {data.loc[data.timepoint==0].shape[0]} rows in the input data for t=0, but expected {n_rna * n_replicate}. "
-            "Check if the input data is correct; all RNAs should have timepoint 0 included. Aborting analysis."
-        )
 
-    return data[["rna_id", "replicate", "timepoint", "epg_raw"]]
+    return data[["rna_id", "timepoint", "replicate", "epg_raw"]]
