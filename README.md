@@ -66,40 +66,55 @@ Difference here is that now script will search for control peak and normalize el
 
 # Input data format
 
-All input data should be placed in the same directory and named following the convention described below (names of CSV files must not be changed anyhow!):
+## Directory structure
+
+Input data should be split across plates that were inserted into Fragment Analyzer. Each plate should have a distinct directory in which plate map and electropherogram files must be placed.
+
+Here is an example of a proper directory structure:
 
 ```sh
-data_dir
-    plate_map.csv
-    epg_0.csv
-    epg_1.csv
-    ...
+my_experiment_dir
+├── my_plate_1
+│   ├── epg.csv
+│   └── plate_map.csv
+├── my_plate_2
+│   ├── epg.csv
+│   └── plate_map.csv
+└── my_plate_3
+    ├── epg.csv
+    └── plate_map.csv
 ```
 
-There are two obligatory input files in order to run the script:
+In this example we have a separate directory for our experiment called `my_experiment_dir` (you can of course name it differently). Within that directory we have 3 directories for 3 of our plates (`my_plate_1`, `my_plate_2`, etc..; again names can be different) that were used in the experiment. Within each plate's directory we must have 2 files named **exactly** `plate_map.csv`, `epg.csv`.
 
-- `plate_map.csv` - it should be a CSV file containg well positions of samples being analyzed. It should be universal across replicates, meaning that each of your replicate should be a copy of each other in terms of positioning on a plate. In other words - replicates of the same RNA - timepoint pair must be on a physically different plates at the same position, so that one plate map can describe all of them.
+Please do not create any additional directories within experiment folder as the script will break. Additional files (like the ones with results) are okay.
+
+## Input files
+
+There are two obligatory input files in order to read data for a given plate:
+
+- `plate_map.csv` - it should be a CSV file containg well positions of samples being analyzed.
 
     Here is a simplified example of what a proper plate_map file should look like:
 
     ```
     001_TP0,002_TP0,003_TP0,001_TP3,002_TP3,003_TP3
-    004_TP0,005_TP0,006_TP0,004_TP3,005_TP3,006_TP3
+    004_TP0,005_TP0,006_TP0,004_TP0,005_TP3,006_TP3
     ```
 
-    In this example in well `A3` we have a sample with label `003_TP0` which represent RNA having ID `003` and run at timepoint `0`h. At well `A6` there is a sample labels ad `003_TP3` which is the same RNA but run at timepoint `3`h. The sample labels should have this format `{rna_id}_TP{timepoint}`, where `rna_id` can be only digits (no letters, no special characters!), and `timepoint` can be intiger or float number (examples: `0`, `1`, `3.5`, `3.333`) that determines timepoints used **in hours**. Do not add any additional prefixes or suffixes as the script might not recognize RNA and timepoint properly.
+    In this example in well `A3` we have a sample with label `003_TP0` which represent RNA having ID `003` and run at timepoint `0`h. At well `A6` there is a sample labeled as `003_TP3` which is the same RNA but run at timepoint `3`h. The sample labels should have this format `{rna_id}_TP{timepoint}`, where `rna_id` is your custom design identifier, and `timepoint` can be intiger or float number (examples: `0`, `1`, `3.5`, `3.333`) that determines timepoints used **in hours**. Do not add any additional suffixes as the script might not recognize RNA and timepoint properly.
 
-    Missing wells within plate map are acceptable, so if you don't want to include specifc RNA - timepoint pair in the analysis just remove it from the platemap and leave cell empty. This will affect all replicates though! Do not remove any timepoint=`0`h.
+    **Missing wells** within plate map are acceptable, so if you don't want to include specifc RNA - timepoint pair on a particular plate in the analysis just remove it from the platemap and leave cell empty. Keep in mind though that you shoud not drop timepoint 0 as it might lead to inproper results (we use timepoint 0 as a reference/baseline point for remaining timepoints). If you really want to remove timepoint 0 please remove as well all the others timepoint that are paired with it.
 
-    Do not add any rows or column names in `plate_map.csv`; those will be added internaly by the script during data processing.
+    **Do not** add any other labels within platemap besides actual samples. If your platemap contains ladder please remove it and leave the cell empty.
+    
+    **Do not** add any rows or column names in `plate_map.csv`; those will be added internaly by the script during data processing. Adding that will cause incorrect well assignment by frameshifting and nonsense results as a consequence.
 
-    Script will inform you how many unique RNA ids, replicates and timepoints have been detected. If that number is different than expected it will raise a warning and you should check you data integrity. Expected number of samples (and as a consequence electropherograms) is `number of RNA` x `number of replicates` x `number of timepoints`. When can it happen? For instance when you drop some timepoints for a given RNA or when some of the sample labels were not recognized.
+    Script will inform you in the logs how many unique RNA ids, replicates and timepoints have been detected. Please double check if the numbers matches your expectations.
 
-- `epg_0.csv`, `epg_1.csv`, ... - these should be a set of Fragment Analyzer electropherogram files (result of capilary electrophoresis); each of them representing one replicate of the same plate map.
+- `epg.csv` - this should be a Fragment Analyzer electropherogram file (result of capilary electrophoresis) with intensity traces and the corresponding nucleotide sizing.
 
-    Files needs to be named with this convention `epg_{i}.csv` where i are following numbers indicating replicate number. So for 4 replicates you should have `epg_0.csv`, `epg_1.csv`, `epg_2.csv`, `epg_3.csv`
-
-    Here is a simplified example of what a proper epg file should look like:
+    Here is a simplified toy example of what a proper plate_map file should look like:
 
     ```csv
     Size (nt),"A1: SampA1","A2: SampA2","A3: SampA3"

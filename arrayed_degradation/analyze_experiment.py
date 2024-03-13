@@ -25,13 +25,11 @@ def analyze_experiment(
     remove_background: bool = False,
     width_param: float = 0.85,
 ) -> None:
+    data_dir_path_obj = Path(data_dir_path)
     LOGGER.info(f"Analyzing experiment...")
 
     LOGGER.info("Reading input data...")
-    data_dir_path_: Path = Path(data_dir_path)
-    plate_map_path = data_dir_path_ / "plate_map.csv"
-    epgs_paths = list(map(Path, sorted(glob(f"{data_dir_path_}/epg_*.csv"))))
-    all_data = process_input_data(plate_map_path, epgs_paths)
+    all_data = process_input_data(data_dir_path_obj)
 
     LOGGER.info("Analyzing data...")
     all_results: dict[str, dict[str, tp.Any]] = {}
@@ -53,7 +51,7 @@ def analyze_experiment(
         all_results[rna_id] = rna_results
 
     LOGGER.info("Processing results...")
-    process_results(all_results, data_dir_path_)
+    process_results(all_results, data_dir_path_obj)
 
 
 # pylint: disable=missing-docstring
