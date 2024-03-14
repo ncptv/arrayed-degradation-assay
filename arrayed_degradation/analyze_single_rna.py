@@ -125,13 +125,6 @@ def analyze_single_rna(
         replicate_indices=replicate_indices,
     )
 
-    # calculate half life for each replicate separately (used to calculate replicability score)
-    results["one_repl_half_lifes"] = estimate_half_life_per_replicate(
-        durations=timepoints,
-        observations=target_peak_areas_normed,
-        replicate_indices=replicate_indices,
-    )["half_life"]
-
     plotter.combined_plotting(
         results,
         timepoints,
