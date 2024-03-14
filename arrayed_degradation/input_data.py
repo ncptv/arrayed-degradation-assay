@@ -56,6 +56,8 @@ def process_plate_map(plate_map: pd.DataFrame) -> pd.DataFrame:
     plate_map["timepoint"] = plate_map.sample_id.str.extract(
         r"TP(\d+(?:\.\d+)?)"
     ).astype(float)
+    # convert timepoint to hours
+    plate_map["timepoint"] = plate_map["timepoint"] / 60
     plate_map["rna_id"] = plate_map.sample_id.str.extract(r"(.+)_TP")
     # drop empty wells
     empty_wells = plate_map.well.loc[

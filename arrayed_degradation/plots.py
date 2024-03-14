@@ -39,7 +39,7 @@ def plot_summary_chart(results: pd.DataFrame) -> Image.Image:
     fig.update_traces(
         marker=dict(color=COLOR_OPTIONS[0].format(opacity=1), symbol="circle")
     )
-    y_min = max(0, (results.half_life - results.half_life_std).min()) * 1.1
+    y_min = max(0, (results.half_life - results.half_life_std).min()) * 0.9
     y_max = min(20, (results.half_life + results.half_life_std).max()) * 1.1
     fig.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="gray", zeroline=True)
     fig.update_yaxes(
