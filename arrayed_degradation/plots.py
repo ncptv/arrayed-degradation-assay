@@ -23,14 +23,12 @@ COLOR_OPTIONS = [
 
 
 def plot_summary_chart(results: pd.DataFrame) -> Image.Image:
-    across_repl_corr = results.across_repl_corr[0]
-
     fig = px.scatter(
         results,
         x="rna_id",
         y="half_life",
         error_y="half_life_std",
-        title=f"Mean half-life; across replicate rank corr: {across_repl_corr:0.4f}",
+        title="Mean half-life",
         width=1200,
     )
     fig.update_layout(
