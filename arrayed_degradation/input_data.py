@@ -16,7 +16,7 @@ class EPG:
     nucleotides: np.ndarray
 
 
-def process_plate_map(plate_map: pd.DataFrame) -> pd.DataFrame:
+def process_plate_map(plate_map: pd.DataFrame, time_unit: str) -> pd.DataFrame:
     """
     Process plate map from pivot format into tabular format.
     Decompose sample labels into df with RNA id, timepoint and well columns.
@@ -57,7 +57,8 @@ def process_plate_map(plate_map: pd.DataFrame) -> pd.DataFrame:
         r"TP(\d+(?:\.\d+)?)"
     ).astype(float)
     # convert timepoint to hours
-    plate_map["timepoint"] = plate_map["timepoint"] / 60
+    if time_unit == "m":
+        plate_map["timepoint"] = plate_map["timepoint"] / 60
     plate_map["rna_id"] = plate_map.sample_id.str.extract(r"(.+)_TP")
     # drop empty wells
     empty_wells = plate_map.well.loc[
@@ -84,7 +85,7 @@ def process_epgs(epgs: pd.DataFrame) -> dict[str, EPG]:
     Process Fragment Analyzer electropherogram data into EPG objects.
     First column in EPG df should contain size in nucleotides, next columns
     should contain electropherogram traces for each sample.
-    Traces columns should contain {letter}-{digit} well identifier like A6 or B12.
+    Traces columns should contain {letter}{digit} well identifier like A6 or B12.
     """
     epgs = epgs.copy()
     well_ids = [re.search(r"([A-Z]+)(\d+)", i).group(0) for i in epgs.columns[1:]]  # type: ignore
@@ -95,7 +96,7 @@ def process_epgs(epgs: pd.DataFrame) -> dict[str, EPG]:
     ).to_dict()
 
 
-def process_plate(plate_path: Path):
+def process_plate(plate_path: Path, time_unit: str) -> pd.DataFrame:
     plate_map_path = plate_path / "plate_map.csv"
     epg_path = plate_path / "epg.csv"
     if not plate_map_path.exists():
@@ -105,7 +106,7 @@ def process_plate(plate_path: Path):
 
     # process plate map
     plate_map = pd.read_csv(plate_map_path, header=None)
-    plate_map = process_plate_map(plate_map)
+    plate_map = process_plate_map(plate_map, time_unit)
     plate_map.loc[:, "plate_id"] = plate_path.name
 
     epgs = pd.read_csv(epg_path)
@@ -114,7 +115,7 @@ def process_plate(plate_path: Path):
     return plate_map.assign(epg_raw=plate_map.apply(lambda x: epgs[x.well], axis=1))
 
 
-def process_input_data(data_dir_path: Path) -> pd.DataFrame:
+def process_input_data(data_dir_path: Path, time_unit: str) -> pd.DataFrame:
     if not data_dir_path.exists():
         raise FileNotFoundError(f"Data directory {data_dir_path} does not exist.")
 
@@ -127,7 +128,7 @@ def process_input_data(data_dir_path: Path) -> pd.DataFrame:
     plates_data = []
     for plate_path in plate_dir_paths:
         try:
-            plates_data.append(process_plate(Path(plate_path)))
+            plates_data.append(process_plate(Path(plate_path), time_unit))
         except FileNotFoundError as e:
             LOGGER.error(f"Error while processing plate {plate_path}: {e}")
             LOGGER.error(f"Skipping plate {plate_path}.")

@@ -21,6 +21,7 @@ def analyze_experiment(
     max_peak: float,
     control_peak_min: float = 235,
     control_peak_max: float = 310,
+    time_unit: str = "m",
     disable_control_peak: bool = False,
     remove_background: bool = False,
     width_param: float = 0.85,
@@ -29,7 +30,7 @@ def analyze_experiment(
     LOGGER.info(f"Analyzing experiment...")
 
     LOGGER.info("Reading input data...")
-    all_data = process_input_data(data_dir_path_obj)
+    all_data = process_input_data(data_dir_path_obj, time_unit)
 
     LOGGER.info("Analyzing data...")
     all_results: dict[str, dict[str, tp.Any]] = {}
@@ -62,11 +63,8 @@ def main(arguments: list[str] | None = None) -> None:
 
     parser.add_argument(
         "--data_dir_path",
-        help="""Path to the directory containing the data files. The directory should contain
-        (1) one plate map file describing positioning of RNA samples and timepoints in hours for
-        each replicate, (2) EPG files in FragmentAnalyzer format (one EPG file per replicate).
-        Plate map file should be named 'plate_map.csv' and EPG files should be named in 'epg_0.csv',
-        'epg_1.csv', etc. format.""",
+        help="""Path to the directory containing the input data. The directory should contain
+        subdirectories for each plate, each containing a plate_map.csv and epg.csv file.""",
         required=True,
         type=str,
     )
@@ -95,8 +93,15 @@ def main(arguments: list[str] | None = None) -> None:
         type=float,
     )
     parser.add_argument(
+        "--time_unit",
+        help="""Time unit for the timepoints in the plate_map.csv file.
+        For hours use 'h', for minutes use 'm', for days 'd'.""",
+        default="m",
+        type=str,
+    )
+    parser.add_argument(
         "--disable_control_peak",
-        help=("Disable the p4p6 control peak used for normalization."),
+        help="Disable the control peak used for normalization.",
         default=False,
         type=bool,
         action=argparse.BooleanOptionalAction,
@@ -106,7 +111,7 @@ def main(arguments: list[str] | None = None) -> None:
         help="""Whether to remove background from target peak. If True it will draw a line at
         the base of detected peak and only the area above that line will be considered
         for half life calculations. It is not adviced to set it because of unstable
-        behaviour and less repeatable results.""",
+        behaviour and less repeatable results for certain cases.""",
         default=False,
         type=bool,
         action=argparse.BooleanOptionalAction,
@@ -129,6 +134,7 @@ def main(arguments: list[str] | None = None) -> None:
         max_peak=args.max_peak,
         control_peak_min=args.control_peak_min,
         control_peak_max=args.control_peak_max,
+        time_unit=args.time_unit,
         disable_control_peak=args.disable_control_peak,
         remove_background=args.remove_background,
         width_param=args.width_param,
