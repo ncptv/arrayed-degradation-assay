@@ -9,6 +9,8 @@ import pandas as pd
 
 from log import LOGGER
 
+LABEL_FORMAT = r".+_TP\d+(?:\.\d+)?"
+
 
 @dataclass
 class EPG:
@@ -53,25 +55,32 @@ def process_plate_map(plate_map: pd.DataFrame, time_unit: str) -> pd.DataFrame:
         plate_map.stack(dropna=False).reset_index().rename(columns={0: "sample_id"})
     )
     plate_map["well"] = plate_map["row"] + plate_map["column"].astype(str)
+
+    # checking label format
+    plate_map["sample_id"] = plate_map["sample_id"].fillna("")
+    proper_label = plate_map.sample_id.str.contains(LABEL_FORMAT, regex=True).fillna(
+        False
+    )
+
+    if not proper_label.all():
+        improper_labels = plate_map.loc[~proper_label, "well"].to_list()
+        LOGGER.warning(
+            f"""Empty/invalid sample labels detected on a plate map on these wells: {improper_labels}.
+            Here are labels of these wells: {plate_map.loc[plate_map.well.isin(improper_labels), 'sample_id'].tolist()}.
+            Check if the input data is correct and empty wells are intentional.
+            Here is the correct format of the label: {{rna_id}}_TP{{i}} where rna_id is an id of RNA and i is a timepoint.
+            Examples of correct label: `mRNA_0001_TP0`, `1234_TP3.5`."""
+        )
+        plate_map = plate_map.loc[proper_label]
+
     plate_map["timepoint"] = plate_map.sample_id.str.extract(
         r"TP(\d+(?:\.\d+)?)"
     ).astype(float)
     # convert timepoint to hours
     if time_unit == "m":
         plate_map["timepoint"] = plate_map["timepoint"] / 60
-    plate_map["rna_id"] = plate_map.sample_id.str.extract(r"(.+)_TP")
-    # drop empty wells
-    empty_wells = plate_map.well.loc[
-        plate_map[["timepoint", "rna_id"]].isna().any(axis=1)
-    ].tolist()
-    if empty_wells:
-        LOGGER.warning(
-            f"Empty/invalid sample labels detected on a plate map on these wells: {empty_wells}. "
-            f"Here are labels of these wells: {plate_map.loc[plate_map.well.isin(empty_wells), 'sample_id'].tolist()} "
-            "Check if the input data is correct and empty wells are intentional."
-        )
-        plate_map = plate_map.dropna(subset=["timepoint", "rna_id"])
 
+    plate_map["rna_id"] = plate_map.sample_id.str.extract(r"(.+)_TP")
     plate_map = plate_map.sort_values(["rna_id", "timepoint", "well"])
     plate_map.loc[:, "inplate_replicate"] = plate_map.groupby("sample_id").cumcount()
 
