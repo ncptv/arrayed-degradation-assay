@@ -5,9 +5,7 @@ import pandas as pd
 from PIL import Image
 
 from log import LOGGER
-from plots import (
-    plot_summary_chart,
-)
+from plots import plot_summary_chart
 
 
 def process_plots(

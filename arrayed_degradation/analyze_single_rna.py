@@ -5,7 +5,6 @@ import pandas as pd
 
 from decay_curve import (
     estimate_half_life,
-    estimate_half_life_per_replicate,
 )
 from input_data import (
     EPG,

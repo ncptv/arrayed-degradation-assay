@@ -60,7 +60,7 @@ def get_peak_area(
     Args:
         nucleotides: npt.NDArray[np.float64]
             Array with sequence nucleotide length corresponding to each intensity reading.
-        values: npt.NDArray[np.float64]
+        trace: npt.NDArray[np.float64]
             Values of intensity of electropherogram.
         min_peak: float
             Left bound of peak. All values on the left will be masked and ignored.
@@ -93,7 +93,7 @@ def get_peak_area(
 def normalize_trace_wrt_control(
     epg: EPG, control_peak_min: float, control_peak_max: float
 ) -> EPG:
-    """Normalize trace of EPG with respect to the p4p6 control peak.
+    """Normalize trace of EPG with respect to the control peak.
     After normalization the area under the control peak is 1, and all traces across replicates
     should be directly comparable.
     It is done to remove impact of pipetting errors and to make sure that the same amount of
