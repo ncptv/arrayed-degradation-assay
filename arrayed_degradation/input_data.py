@@ -1,7 +1,6 @@
 import re
 import string
 from dataclasses import dataclass
-from glob import glob
 from pathlib import Path
 
 import numpy as np
@@ -128,8 +127,8 @@ def process_input_data(data_dir_path: Path, time_unit: str) -> pd.DataFrame:
     if not data_dir_path.exists():
         raise FileNotFoundError(f"Data directory {data_dir_path} does not exist.")
 
-    plate_paths = glob(str(data_dir_path / "*"))
-    plate_dir_paths = [Path(i) for i in plate_paths if Path(i).is_dir()]
+    plate_paths = list(data_dir_path.glob("*"))
+    plate_dir_paths = [path for path in plate_paths if path.is_dir()]
     LOGGER.info(
         f"Found these plate subdirectories in the data directory: {[str(i) for i in plate_dir_paths]}"
     )
@@ -137,7 +136,7 @@ def process_input_data(data_dir_path: Path, time_unit: str) -> pd.DataFrame:
     plates_data = []
     for plate_path in plate_dir_paths:
         try:
-            plates_data.append(process_plate(Path(plate_path), time_unit))
+            plates_data.append(process_plate(plate_path, time_unit))
         except FileNotFoundError as e:
             LOGGER.error(f"Error while processing plate {plate_path}: {e}")
             LOGGER.error(f"Skipping plate {plate_path}.")
