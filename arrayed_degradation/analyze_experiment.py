@@ -4,7 +4,7 @@ import typing as tp
 from pathy import Pathy
 from tqdm import tqdm
 
-from analyze_single_rna import analyze_single_rna,
+from analyze_single_rna import analyze_single_rna
 from input_data import process_input_data
 from log import LOGGER
 from results import process_results
