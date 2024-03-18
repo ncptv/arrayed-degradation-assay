@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 import numpy.typing as npt
-from scipy.optimize import curve_fit, OptimizeWarning
+from scipy.optimize import OptimizeWarning, curve_fit
 from sklearn.metrics import r2_score
 
 warnings.simplefilter("ignore", OptimizeWarning)
@@ -50,30 +50,6 @@ def estimate_half_life(
         "r2_score": r2,
         "fit": fit["fit"],
     }
-
-
-def estimate_half_life_per_replicate(
-    durations: npt.NDArray[np.float64],
-    observations: npt.NDArray[np.float64],
-    replicate_indices: npt.NDArray[np.float64],
-) -> dict[str, tp.Any]:
-    metrics: dict[str, tp.Any] = {
-        "decay_rate": [],
-        "half_life": [],
-        "half_life_std": [],
-        "fit": [],
-    }
-    for repl in np.unique(replicate_indices):
-        fit = estimate_half_life(
-            durations=durations[replicate_indices == repl],
-            observations=observations[replicate_indices == repl],
-            replicate_indices=replicate_indices[replicate_indices == repl],
-        )
-        metrics["decay_rate"].append(fit["decay_rate"])
-        metrics["half_life"].append(fit["half_life"])
-        metrics["half_life_std"].append(fit["half_life_std"])
-        metrics["fit"].append(fit["fit"])
-    return metrics
 
 
 def compute_cv_r2(

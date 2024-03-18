@@ -1,16 +1,11 @@
 import argparse
 import typing as tp
-from glob import glob
-from pathlib import Path
 
+from pathy import Pathy
 from tqdm import tqdm
 
-from analyze_single_rna import (
-    analyze_single_rna,
-)
-from input_data import (
-    process_input_data,
-)
+from analyze_single_rna import analyze_single_rna,
+from input_data import process_input_data
 from log import LOGGER
 from results import process_results
 
@@ -25,8 +20,8 @@ def analyze_experiment(
     disable_control_peak: bool = False,
     remove_background: bool = False,
     width_param: float = 0.85,
-) -> None:
-    data_dir_path_obj = Path(data_dir_path)
+) -> str:
+    data_dir_path_obj = Pathy.fluid(data_dir_path)
     LOGGER.info(f"Analyzing experiment...")
 
     LOGGER.info("Reading input data...")
@@ -53,10 +48,11 @@ def analyze_experiment(
 
     LOGGER.info("Processing results...")
     process_results(all_results, data_dir_path_obj)
+    return data_dir_path
 
 
 # pylint: disable=missing-docstring
-def main(arguments: list[str] | None = None) -> None:
+def main(arguments: list[str] | None = None) -> str:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

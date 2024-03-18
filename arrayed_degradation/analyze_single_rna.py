@@ -3,20 +3,14 @@ import typing as tp
 import numpy as np
 import pandas as pd
 
-from decay_curve import (
-    estimate_half_life,
-)
-from input_data import (
-    EPG,
-)
+from decay_curve import estimate_half_life
+from input_data import EPG
 from peaks import (
     compute_peak_bounds,
     get_peak_area,
     normalize_trace_wrt_control,
 )
-from plots import (
-    Plotter,
-)
+from plots import Plotter
 
 
 def analyze_single_rna(

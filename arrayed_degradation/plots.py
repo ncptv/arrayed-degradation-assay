@@ -1,6 +1,6 @@
+import logging
 import typing as tp
 from io import BytesIO
-import logging
 
 import numpy as np
 import numpy.typing as npt
