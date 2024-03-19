@@ -99,7 +99,7 @@ The difference between this and _Example 1_ is that now script will search for c
 
 #### Directory structure
 
-The script assumes a strict directory structure where Fragment Analyzer outputs and plate maps are placed next to each other in subfolders. The plate map also has a strict structure, encoding the identity of the molecule in each well, as well as the time interval at which it was degrated.
+The script assumes a strict directory structure where Fragment Analyzer outputs and plate maps are placed next to each other in subfolders. The plate map also has a strict structure, encoding the identity of the molecule in each well, as well as the time interval at which it was degraded.
 
 Here is an example of the expected directory structure for an experiment with 3 plates:
 
@@ -120,6 +120,8 @@ In this example we have a separate directory for our experiment called `my_exper
 
 Please do not create any additional directories within experiment folder as the script will break. Additional files (like the ones with results) are okay.
 
+Plate maps do not have to be identical across plates, meaning that you don't have to enforce the same location of sequence - timpoint pair.
+
 #### Input files
 
 There are two obligatory input files in order to read data for a given plate:
@@ -133,7 +135,9 @@ There are two obligatory input files in order to read data for a given plate:
     004_TP0,005_TP0,006_TP0,004_TP180,005_TP180,006_TP180
     ```
 
-    In this example in well `A3` we have a sample with label `003_TP0` which represents RNA having ID `003` and degraded for `0` minutes. At well `A6` there is a sample labeled as `003_TP180` which is the same RNA but degraded for `180`min. The sample labels should have this format **`{rna_id}_TP{timepoint}`**, where `rna_id` is your molecule identifier, and `timepoint` can be integer or float number that determines timepoints used (by default  **in minutes**; could be changed to hours or days with `--time_unit` argument). Do not add any additional suffixes as the script might not recognize RNA and timepoint properly. For each RNA and each technical replicate you must have sample with timepoint 0. Replicates of the same RNA-timepoint pair within one plate or across plates are acceptable. There are no strict layout requirements or assumptions for plating your samples, meaning that you can order them as you wish. Plate maps files do not need to be the same for all of your plates. However, it is advised to think of physically distinct plates as technical replicates (so exact copies of each other) and design your experiment to follow this pattern.
+    In this example in well `A3` we have a sample with label `003_TP0` which represents RNA having ID `003` and degraded for `0` minutes. At well `A6` there is a sample labeled as `003_TP180` which is the same RNA but degraded for `180`min. The sample labels should have this format **`{rna_id}_TP{timepoint}`**, where `rna_id` is your molecule identifier, and `timepoint` can be integer or float number that determines timepoints used (by default  **in minutes**; could be changed to hours or days with `--time_unit` argument). Do not add any additional suffixes as the script might not recognize RNA and timepoint properly. 
+    
+    For each RNA and each technical replicate you must have sample with timepoint 0. Replicates of the same RNA-timepoint pair within one plate or across plates are acceptable. There are no strict layout requirements or assumptions for plating your samples, meaning that you can order them as you wish. Plate maps files do not need to be the same for all of your plates. However, it is advised to think of physically distinct plates as technical replicates (so exact copies of each other) and design your experiment to follow this pattern.
 
     **Missing wells** within plate map are acceptable, so if you don't want to include specifc RNA-timepoint pair on a particular plate in the analysis just remove it from the platemap and leave cell empty. Keep in mind though that you shoud not drop timepoint 0 as it might lead to improper results (we use timepoint 0 as a reference/baseline point for remaining timepoints). If you really want to remove timepoint 0 please remove as well all the others timepoint that are paired with it.
 
