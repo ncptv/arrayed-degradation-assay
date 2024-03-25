@@ -33,11 +33,15 @@ Continue reading below for detailed instructions on how to use for specific use-
 ## Usage
 
 
-### Requirements
+### Installation
 
-First clone the code repository from github into your machine via git. If you don't have git you can download it from [here](https://github.com/git-guides/install-git). If you don't want to install it, just download the .zip file containing code for this repo (you can do it by clicking on blue `<>Code` button on main page of this repo, and then `Download ZIP`).
+* [Install Python 3.10](https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe), if it isn’t installed there yet.
+  - Tip: you may need to [run the python installer as Administrator](assets/python-installer-run-as-admin.png).
+* Download the contents of this repository [here](https://github.com/ncptv/arrayed-degradation-assay/archive/refs/heads/main.zip).
+* [Unzip the repository](assets/zip-file-exract-all.png) into a known location.
 
-[Install Python 3.10](https://docs.python.org/3.10/using/windows.html), if it isn’t installed there yet.
+
+#### Install the python requirements
 
 This script requires several standard computational libraries like `numpy`, `pandas`, `sklearn` and `scipy`, as well as `plotly` and `PIL` for visualizations. You will find all of them in `requirements.txt` file.
 
