@@ -9,7 +9,7 @@ setup(
     description='A package for arrayed degradation assay analysis.',
     url='https://github.com/ncptv/arrayed-degradation-assay',
     author='Inceptive Nucleics, Inc.',
-    author_email='',
+    author_email='opensource@inceptive.team',
     license='Apache 2.0',
     packages=find_packages(),
     install_requires=required,
