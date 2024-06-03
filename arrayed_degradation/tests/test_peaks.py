@@ -45,7 +45,7 @@ def epg_with_control_peak() -> EPG:
 
 
 @pytest.mark.parametrize(
-    "epg, width_param, expected_left, expected_right",
+    "epg, rel_height, expected_left, expected_right",
     [
         ("clean_epg", 0.75, 416, 583),
         ("clean_epg", 0.9, 392, 607),
@@ -54,13 +54,13 @@ def epg_with_control_peak() -> EPG:
     ],
 )
 def test_peak_bounds(
-    request, epg, width_param, expected_left: float, expected_right: float
+    request, epg, rel_height, expected_left: float, expected_right: float
 ):
     min_peak = 0
     max_peak = 1000
     epg = request.getfixturevalue(epg)
     left, peak, right, prominence = compute_peak_bounds(
-        epg.nucleotides, epg.trace, min_peak, max_peak, width_param
+        epg.nucleotides, epg.trace, min_peak, max_peak, rel_height
     )
     assert left == approx(expected_left)
     assert right == approx(expected_right)

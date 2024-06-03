@@ -79,7 +79,7 @@ Optional arguments:
 - `--control_peak_max` the right bound of the control peak (for example p4p6) in nucleotides; the default is 310 nucleotides; the control peak will be searched for within the [`control_min_peak`, `control_max_peak`] interval;
 - `--time_unit` the time unit used in `plate_map.csv` timepoint labels in the plate map. `m` for minutes, `h` for hours, `d` for days. Defaults to minutes.
 - `--remove_background` whether to remove background from target peak. By default, the script does not remove background. If this argument is set it will draw a line at the base of detected peak and only the area above that line will be considered for half life calculations. It is not advised to set it because of unstable behaviour and less repeatable results in some cases.
-- `--width_param` parameter that controls the width of the target peak. It ranges from 0 to 1. Default is 0.85. The higher the value the wider bounds of the target peak. Do not exeed 0.95 as you will capture everything as peak. 0.75 is safe but quite conservative. 0.85 captures mostly what you expect but can grab some noise.
+- `--rel_height` parameter that controls the width of the target peak. It ranges from 0 to 1. Default is 0.85. The higher the value the wider bounds of the target peak. Do not exeed 0.95 as you will capture everything as peak. 0.75 is safe but quite conservative. 0.85 captures mostly what you expect but can grab some noise.
 
 ### Examples
 
@@ -94,10 +94,10 @@ With the command above you will run the analysis; the script will search for the
 #### Example 2 - run with (1) control peak, (2) target peak background removal and (3) narrower peaks
 
 ```sh
-python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1500 --max_peak 2000 --remove_background --width_param 0.7
+python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1500 --max_peak 2000 --remove_background --rel_height 0.7
 ```
 
-The difference between this and _Example 1_ is that now script will search for control peak and normalize electropherograms traces with respect to them. Peak bounds are not provided so the script will use the default bounds (235, 310) for the control sequence. Additionally, the script will remove backgroud from the target peak by drawing a line at base of the peak (keep in mind that it might not work well for certain cases like migrating peaks, so use this argument with caution and double check if areas are correctly determined in results.pdf). Finally, the script will try to make peaks bounds more narrow due to decreasing `width_param` from the default of 0.85 to 0.7.
+The difference between this and _Example 1_ is that now script will search for control peak and normalize electropherograms traces with respect to them. Peak bounds are not provided so the script will use the default bounds (235, 310) for the control sequence. Additionally, the script will remove backgroud from the target peak by drawing a line at base of the peak (keep in mind that it might not work well for certain cases like migrating peaks, so use this argument with caution and double check if areas are correctly determined in results.pdf). Finally, the script will try to make peaks bounds more narrow due to decreasing `rel_height` from the default of 0.85 to 0.7.
 
 ### Input data format
 
