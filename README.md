@@ -49,7 +49,7 @@ In order to install them enter into a directory with your code and install it vi
 
 ```sh
 cd arrayed-degradation-assay
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ### Running the analysis
