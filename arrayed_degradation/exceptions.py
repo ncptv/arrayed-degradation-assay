@@ -8,3 +8,15 @@ class PeakOutOfBoundsError(InVitroDegError):
 
 class LackOfTP0Error(InVitroDegError):
     pass
+
+
+class NormalizationError(InVitroDegError):
+    pass
+
+
+class EPGError(InVitroDegError):
+    pass
+
+
+class NoDataPointsError(InVitroDegError):
+    pass
