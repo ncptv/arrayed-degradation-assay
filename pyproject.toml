@@ -1,20 +1,20 @@
 [project]
 name = "arrayed-degradation-assay"
 version = "0.1.0"
-description = "Add your description here"
+description = "Analyse the data for RNA stability assay"
 authors = [
-    { name = "Albert Roethel", email = "albert@inceptive.team" }
+    { name = "Albert Roethel", email = "opensource@inceptive.team" }
 ]
 dependencies = [
-    "Pillow==9.5.0",
-    "kaleido==0.2.1",
-    "numpy==1.23.5",
-    "pandas==2.0.3",
-    "pathy==0.10.1",
-    "plotly==5.14.1",
-    "scikit-learn==1.2.2",
-    "scipy==1.11.1",
-    "tqdm==4.65.0",
+    "Pillow==9.5.*",
+    "kaleido==0.2.*",
+    "numpy==1.23.*",
+    "pandas==2.0.*",
+    "pathy==0.10.*",
+    "plotly==5.14.*",
+    "scikit-learn==1.2.*",
+    "scipy==1.11.*",
+    "tqdm==4.65.*",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
