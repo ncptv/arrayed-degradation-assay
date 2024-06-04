@@ -35,6 +35,12 @@ Continue reading below for detailed instructions on how to use for specific use-
 
 ### Installation
 
+#### Through pip
+
+`pip install arrayed-degradation-assay==0.1.0`
+
+#### Manual
+
 * [Install Python 3.10](https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe), if it isn’t installed there yet.
   - Tip: you may need to [run the python installer as Administrator](assets/python-installer-run-as-admin.png).
 * Download the contents of this repository [here](https://github.com/ncptv/arrayed-degradation-assay/archive/refs/heads/main.zip).
