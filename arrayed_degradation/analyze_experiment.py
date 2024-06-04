@@ -4,10 +4,15 @@ import typing as tp
 from pathy import Pathy
 from tqdm import tqdm
 
-from analyze_single_rna import analyze_single_rna
-from input_data import process_input_data
-from log import LOGGER
-from results import process_results
+from arrayed_degradation.analyze_single_rna import (
+    analyze_single_rna,
+)
+from arrayed_degradation.exceptions import InVitroDegError
+from arrayed_degradation.input_data import (
+    process_input_data,
+)
+from arrayed_degradation.log import LOGGER
+from arrayed_degradation.results import process_results
 
 
 def analyze_experiment(
@@ -19,17 +24,21 @@ def analyze_experiment(
     time_unit: str = "m",
     disable_control_peak: bool = False,
     remove_background: bool = False,
-    width_param: float = 0.85,
+    rel_height: float = 0.85,
 ) -> str:
     data_dir_path_obj = Pathy.fluid(data_dir_path)
-    LOGGER.info(f"Analyzing experiment...")
+    LOGGER.info("Analyzing experiment...")
 
     LOGGER.info("Reading input data...")
     all_data = process_input_data(data_dir_path_obj, time_unit)
 
     LOGGER.info("Analyzing data...")
     all_results: dict[str, dict[str, tp.Any]] = {}
-    for rna_id, rna_data in tqdm(all_data.groupby("rna_id")):
+
+    sucesses, fails = 0, 0
+    progress_bar = tqdm(total=all_data.rna_id.nunique())
+    for i, (rna_id, rna_data) in enumerate(all_data.groupby("rna_id")):
+        LOGGER.info(f"Analyzing RNA {rna_id}...")
         try:
             rna_results = analyze_single_rna(
                 rna_data,
@@ -39,12 +48,20 @@ def analyze_experiment(
                 control_peak_max,
                 disable_control_peak,
                 remove_background,
-                width_param,
+                rel_height,
             )
-        except Exception as e:
+            all_results[rna_id] = rna_results
+            sucesses += 1
+        except InVitroDegError as e:
+            fails += 1
             LOGGER.error(f"Failed to analyze RNA {rna_id}. Error: {e}")
-            continue
-        all_results[rna_id] = rna_results
+        if i > 0 and i % 10 == 0:
+            progress_bar.set_postfix(
+                {"rna_id": rna_id, "sucesses": sucesses, "fails": fails}, refresh=False
+            )
+            progress_bar.update(10)
+
+    LOGGER.info(f"Analysis finished. Sucesses: {sucesses}, Fails: {fails}.")
 
     LOGGER.info("Processing results...")
     process_results(all_results, data_dir_path_obj)
@@ -113,15 +130,14 @@ def main(arguments: list[str] | None = None) -> str:
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
-        "--width_param",
-        help="""Width param impacts significantly the width of the peak that is detected.
-        The higher the value the wider bounds of the target peak. Do not exeed 0.95 as
-        you will capture everything as peak. 0.75 is safe but quite conservative. 0.85
-        captures mostly what you expect but can grab some noise.""",
+        "--rel_height",
+        help="""Relative height of the peak to be used for the `rel_height` bounding method.
+        It determines the percentage of the peak height that will be used to draw a horizontal line
+        to find the bounds of the peak. 
+        Should be between 0 and 1 (although feasible values are between 0.5 and 0.95). The heigher the value the wider the bounds will be.""",
         default=0.85,
         type=float,
     )
-
     args = parser.parse_args(arguments)
     LOGGER.info(f"Analyzing experiment with the following args: {args}")
     return analyze_experiment(
@@ -133,7 +149,7 @@ def main(arguments: list[str] | None = None) -> str:
         time_unit=args.time_unit,
         disable_control_peak=args.disable_control_peak,
         remove_background=args.remove_background,
-        width_param=args.width_param,
+        rel_height=args.rel_height,
     )
 
 

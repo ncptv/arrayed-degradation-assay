@@ -6,15 +6,29 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from log import LOGGER
+from arrayed_degradation.exceptions import EPGError
+from arrayed_degradation.log import LOGGER
 
 LABEL_FORMAT = r".+_TP\d+(?:\.\d+)?"
 
 
 @dataclass
 class EPG:
+    """
+    Class representing electropherogram data. Contains trace and nucleotides arrays (both of them must have equal size).
+
+    Raises:
+        EPGError: if trace and nucleotides arrays have different shapes
+    """
+
     trace: np.ndarray
     nucleotides: np.ndarray
+
+    def __post_init__(self) -> None:
+        if self.trace.shape != self.nucleotides.shape:
+            raise EPGError(
+                f"Trace and nucleotides arrays should have the same shape. Got {self.trace.shape} and {self.nucleotides.shape}."
+            )
 
 
 def process_plate_map(plate_map: pd.DataFrame, time_unit: str) -> pd.DataFrame:
@@ -105,6 +119,24 @@ def process_epgs(epgs: pd.DataFrame) -> dict[str, EPG]:
 
 
 def process_plate(plate_path: Path, time_unit: str) -> pd.DataFrame:
+    """
+    Process plate data from a single plate directory.
+
+    Args:
+        plate_path (Path):
+            path to the plate directory
+        time_unit (str):
+            time unit used in the experiment; 'h' for hours, 'm' for minutes
+
+    Raises:
+        FileNotFoundError:
+            raised if there is no `epg.csv` or `plate_map.csv` file in the plate directory
+
+    Returns:
+        pd.DataFrame:
+            processed plate data along with EPGs assigned to each well
+    """
+
     plate_map_path = plate_path / "plate_map.csv"
     epg_path = plate_path / "epg.csv"
     if not plate_map_path.exists():
@@ -124,11 +156,24 @@ def process_plate(plate_path: Path, time_unit: str) -> pd.DataFrame:
 
 
 def process_input_data(data_dir_path: Path, time_unit: str) -> pd.DataFrame:
+    """Process input data from a directory containing plate subdirectories.
+
+    Args:
+        data_dir_path (Path):
+            path to the directory containing plate subdirectories
+        time_unit (str):
+            time unit used in the experiment; 'h' for hours, 'm' for minutes
+
+    Returns:
+        pd.DataFrame:
+            processed data from all plates in the data directory
+    """
+
     if not data_dir_path.exists():
         raise FileNotFoundError(f"Data directory {data_dir_path} does not exist.")
 
     plate_paths = list(data_dir_path.glob("*"))
-    plate_dir_paths = [path for path in plate_paths if path.is_dir()]
+    plate_dir_paths = sorted([path for path in plate_paths if path.is_dir()])
     LOGGER.info(
         f"Found these plate subdirectories in the data directory: {[str(i) for i in plate_dir_paths]}"
     )

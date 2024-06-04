@@ -58,22 +58,41 @@ class Plotter:
 
     def __init__(
         self,
-        sequence_name: str,
-        timepoints: list[float],
-        n_replicate: int,
+        rna_data: pd.DataFrame,
+        fit_results: dict[str, float | tp.Callable],
+        remove_background: bool,
+        control_peak_min: float | None = None,
+        control_peak_max: float | None = None,
     ) -> None:
-        self.sequence_name = sequence_name
+        self.rna_data = rna_data
+        self.fit_results = fit_results
+        self.remove_background = remove_background
+        self.control_peak_min = control_peak_min
+        self.control_peak_max = control_peak_max
+
+        self.fit_fn: tp.Callable = tp.cast(tp.Callable, fit_results["fit"])
+        self.sequence_name = rna_data.rna_id.unique()[0]
+        self.timepoints = sorted(rna_data.timepoint.unique())
         self.timepoint_to_color = {
-            d: COLOR_OPTIONS[i % len(COLOR_OPTIONS)] for i, d in enumerate(timepoints)
+            d: COLOR_OPTIONS[i % len(COLOR_OPTIONS)]
+            for i, d in enumerate(self.timepoints)
         }
+        self.replicates = sorted(rna_data.replicate.unique())
         self.max_epg_value = 0
 
         self.fig_decay_curve = go.Figure(
             layout=go.Layout(
                 xaxis_title="Time (hours)",
                 yaxis_title="Fraction remaining",
-                showlegend=False,
                 width=500,
+                legend=dict(
+                    yanchor="top",
+                    y=1.2,
+                    xanchor="right",
+                    x=1.15,
+                    font_family="Courier New",
+                    font_size=10,
+                ),
             )
         )
 
@@ -83,7 +102,6 @@ class Plotter:
                 xaxis_title="Time (hours)",
                 yaxis_title="Residual",
                 width=350,
-                yaxis_range=[-0.1, 0.1],
                 showlegend=False,
             )
         )
@@ -92,12 +110,11 @@ class Plotter:
             layout=go.Layout(
                 title="RNA amount",
                 xaxis_title="Time",
-                yaxis_title="raw RNA amount (area under the peak)",
+                yaxis_title="RNA amount (area under the peak)",
                 width=350,
             )
         )
 
-        # figure with electropherogram
         self.fig_epgs = [
             go.Figure(
                 layout=go.Layout(
@@ -106,31 +123,39 @@ class Plotter:
                     yaxis_title="Signal intensity",
                     xaxis_range=[0, 2500],
                     width=1200,
+                    legend=dict(
+                        yanchor="bottom",
+                        y=1,
+                        xanchor="left",
+                        x=0.5,
+                        font_family="Courier New",
+                        font_size=10,
+                    ),
                 )
             )
-            for i in range(n_replicate)
+            for i in range(len(self.replicates))
         ]
 
-    def plot_decay_curve(
-        self,
-        timepoints: npt.NDArray[np.float64],
-        fractions_remaining: npt.NDArray[np.float64],
-        fit_results: dict[str, float | tp.Callable],
-        fit_fn: tp.Callable,
-    ) -> None:
-        self.fig_decay_curve.add_trace(
-            go.Scatter(
-                x=timepoints,
-                y=fractions_remaining,
-                name="data",
-                mode="markers",
-                marker=dict(color=COLOR_OPTIONS[2].format(opacity=1)),
+    def plot_decay_curve(self) -> None:
+        for (repl, timepoint), data in self.rna_data.groupby(
+            ["replicate", "timepoint"]
+        ):
+            self.fig_decay_curve.add_trace(
+                go.Scatter(
+                    x=data.timepoint,
+                    y=data.fraction_remaining,
+                    mode="markers",
+                    name=f"repl {repl+1}; tp {timepoint: <5}h",
+                    marker=dict(
+                        color=self.timepoint_to_color[timepoint].format(opacity=1),
+                        symbol=repl,
+                    ),
+                )
             )
-        )
         self.fig_decay_curve.add_trace(
             go.Scatter(
-                x=np.linspace(min(timepoints), max(timepoints)),
-                y=fit_fn(np.linspace(min(timepoints), max(timepoints))),
+                x=np.linspace(min(self.timepoints), max(self.timepoints)),
+                y=self.fit_fn(np.linspace(min(self.timepoints), max(self.timepoints))),
                 name="fit",
                 mode="lines",
                 line=dict(color=COLOR_OPTIONS[0].format(opacity=1)),
@@ -138,24 +163,27 @@ class Plotter:
         )
         self.fig_decay_curve.update_layout(
             title=f"Decay curve of {self.sequence_name}<br>"
-            f"half life {fit_results['half_life']:0.3f} h (+- {fit_results['half_life_std']:0.3f} std)<br>"
-            f"R^2 {fit_results['r2_score']:0.2f}",
+            f"half life {self.fit_results['half_life']:0.3f} h (+- {self.fit_results['half_life_std']:0.3f} std)<br>"
+            f"R^2 {self.fit_results['r2_score']:0.2f}",
             yaxis_range=[0, 1.05],
         )
 
-    def plot_residuals(
-        self,
-        timepoints: npt.NDArray[np.float64],
-        fractions_remaining: npt.NDArray[np.float64],
-        fit: tp.Callable[[npt.NDArray[np.float64]], npt.NDArray[np.float64]],
-    ) -> None:
+    def plot_residuals(self) -> None:
+        timepoints = self.rna_data.timepoint
+
         self.fig_residuals.add_trace(
             go.Scatter(
                 x=timepoints,
-                y=fractions_remaining - fit(timepoints),
+                y=self.rna_data.fraction_remaining - self.fit_fn(timepoints),
                 name="data",
                 mode="markers",
-                marker=dict(color=COLOR_OPTIONS[2].format(opacity=1)),
+                marker=dict(
+                    color=[
+                        self.timepoint_to_color[i].format(opacity=1)
+                        for i in self.rna_data.timepoint
+                    ],
+                    symbol=self.rna_data.replicate,
+                ),
             )
         )
         self.fig_residuals.add_trace(
@@ -168,35 +196,22 @@ class Plotter:
             )
         )
 
-    def plot_rna_amounts(
-        self,
-        timepoints: npt.NDArray[np.float64],
-        control_mrna: npt.NDArray[np.float64] | None,
-        peak_area: npt.NDArray[np.float64],
-    ) -> None:
-        if control_mrna is not None:
-            self.fig_areas.add_trace(
-                go.Scatter(
-                    x=timepoints,
-                    y=control_mrna,
-                    name="control (m)RNA",
-                    mode="markers",
-                    line=dict(color="forestgreen"),
-                )
-            )
-            self._add_line_with_std(
-                self.fig_areas,
-                timepoints,
-                control_mrna,
-                color="forestgreen",
-            )
+    def plot_rna_amounts(self) -> None:
+        timepoints = self.rna_data.timepoint
+        peak_area = self.rna_data.target_peak_areas
         self.fig_areas.add_trace(
             go.Scatter(
                 x=timepoints,
                 y=peak_area,
                 name="peak area",
                 mode="markers",
-                line=dict(color=COLOR_OPTIONS[0].format(opacity=1)),
+                marker=dict(
+                    color=[
+                        self.timepoint_to_color[i].format(opacity=1)
+                        for i in self.rna_data.timepoint
+                    ],
+                    symbol=self.rna_data.replicate,
+                ),
             )
         )
         self._add_line_with_std(
@@ -205,69 +220,76 @@ class Plotter:
             peak_area,
             color=COLOR_OPTIONS[0].format(opacity=1),
         )
-        self.fig_areas.update_layout(
-            legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99)
-        )
 
-    def plot_sample_trace(
-        self,
-        nucleotides: npt.NDArray[np.float64],
-        trace: npt.NDArray[np.float64],
-        timepoint: float,
-        min_peak: float,
-        max_peak: float,
-        control_min_peak: float | None,
-        control_max_peak: float | None,
-        repl_no: int,
-        remove_background: bool,
-    ) -> None:
-        # add epg
-        self.fig_epgs[repl_no].add_trace(
-            go.Scatter(
-                x=nucleotides,
-                y=trace,
-                name=f"t={timepoint}h",
-                mode="lines",
-                line=dict(
-                    width=3,
-                    color=self.timepoint_to_color[timepoint].format(opacity=0.95),
+    def plot_sample_traces(self) -> None:
+        for (repl, timepoint), data in self.rna_data.groupby(
+            ["replicate", "timepoint"]
+        ):
+            if "epg_normed" in data and data["epg_normed"].values[0] is not None:
+                epg = data["epg_normed"].values[0]
+                self.fig_epgs[repl].update_layout(
+                    yaxis_title="Signal intensity; (normalized wrt control peak)"
+                )
+            else:
+                epg = data["epg_raw"].values[0]
+            nucleotides = epg.nucleotides
+            trace = epg.trace
+            left_bound = data.left_bound.values[0]
+            right_bound = data.right_bound.values[0]
+            fail_reason = data.failed.values[0]
+            label = f"t={str(timepoint) + 'h': <12}{'[FAILED] ' + fail_reason if fail_reason else ''}"
+            # add epg
+            self.fig_epgs[repl].add_trace(
+                go.Scatter(
+                    x=nucleotides,
+                    y=trace,
+                    name=label,
+                    mode="lines",
+                    line=dict(
+                        width=3,
+                        color=self.timepoint_to_color[timepoint].format(opacity=0.95),
+                    ),
                 ),
-            ),
-        )
-        # add target bounds
-        self.fig_epgs[repl_no].add_vline(
-            min_peak,
-            line=dict(dash="dash", width=1, color="rgba(249, 249, 249, 0.5)"),
-        )
-        self.fig_epgs[repl_no].add_vline(
-            max_peak,
-            line=dict(dash="dash", width=1, color="rgba(249, 249, 249, 0.5)"),
-        )
-        # add area under the curve of target
-        self.fig_epgs[repl_no].add_trace(
-            self._get_area_trace(
-                nucleotides=nucleotides,
-                trace=trace,
-                boundaries=(min_peak, max_peak),
-                color=self.timepoint_to_color[timepoint].format(opacity=0.95),
-                remove_background=remove_background,
             )
-        )
+            if left_bound is not None and fail_reason is None:
+                if timepoint == 0:
+                    tp0_left_bound = left_bound
+                    tp0_right_bound = right_bound
+                    # add target bounds
+                    self.fig_epgs[repl].add_vline(
+                        tp0_left_bound,
+                        line=dict(
+                            dash="dash", width=1, color="rgba(249, 249, 249, 0.5)"
+                        ),
+                    )
+                    self.fig_epgs[repl].add_vline(
+                        tp0_right_bound,
+                        line=dict(
+                            dash="dash", width=1, color="rgba(249, 249, 249, 0.5)"
+                        ),
+                    )
+                # add area under the curve of target
+                self.fig_epgs[repl].add_traces(
+                    self._get_area_traces(
+                        nucleotides=nucleotides,
+                        trace=trace,
+                        boundaries=(tp0_left_bound, tp0_right_bound),
+                        color=self.timepoint_to_color[timepoint],
+                        remove_background=self.remove_background,
+                        prominence=data.prominence.values[0],
+                    )
+                )
 
-        if control_min_peak is not None and timepoint == 0:
-            # add control bounds
-            self.fig_epgs[repl_no].add_vline(
-                control_min_peak,
-                line=dict(dash="dash", width=1, color="rgba(249, 249, 249, 0.5)"),
-            )
-            self.fig_epgs[repl_no].add_vline(
-                control_max_peak,
-                line=dict(dash="dash", width=1, color="rgba(249, 249, 249, 0.5)"),
-            )
-        if max(trace) > self.max_epg_value:
-            self.max_epg_value = max(trace)
-            for fig in self.fig_epgs:
-                fig.update_yaxes(range=[0, self.max_epg_value])
+            if self.control_peak_min is not None and timepoint == 0:
+                # add control bounds
+                self.fig_epgs[repl].add_vline(
+                    self.control_peak_min,
+                    line=dict(dash="dash", width=1, color="rgba(249, 249, 249, 0.5)"),
+                )
+                self.fig_epgs[repl].add_vline(
+                    self.control_peak_max,
+                    line=dict(dash="dash", width=1, color="rgba(249, 249, 249, 0.5)"),
+                )
 
     def save_fig(self) -> Image.Image:
         images = []
@@ -286,63 +308,49 @@ class Plotter:
         big_image = self.concat_images([big_image, *images], axis=0)
         return big_image
 
-    def combined_plotting(
-        self,
-        fit_results: dict[str, float | tp.Callable],
-        all_sample_timepoints: npt.NDArray[np.float64],
-        all_control_areas: npt.NDArray[np.float64],
-        all_peak_areas: npt.NDArray[np.float64],
-        all_decay_normed_areas: npt.NDArray[np.float64],
-    ) -> None:
-        self.plot_rna_amounts(
-            timepoints=all_sample_timepoints,
-            control_mrna=all_control_areas if len(all_control_areas) != 0 else None,
-            peak_area=all_peak_areas,
-        )
-        self.plot_decay_curve(
-            timepoints=all_sample_timepoints,
-            fractions_remaining=all_decay_normed_areas,
-            fit_results=fit_results,
-            fit_fn=tp.cast(tp.Callable, fit_results["fit"]),
-        )
-        self.plot_residuals(
-            timepoints=all_sample_timepoints,
-            fractions_remaining=all_decay_normed_areas,
-            fit=tp.cast(tp.Callable, fit_results["fit"]),
-        )
+    def combined_plotting(self) -> None:
+        self.plot_decay_curve()
+        self.plot_residuals()
+        self.plot_rna_amounts()
+        self.plot_sample_traces()
 
     @staticmethod
-    def _get_area_trace(
+    def _get_area_traces(
         nucleotides: npt.NDArray[np.float64],
         trace: npt.NDArray[np.float64],
         boundaries: tuple[float, float],
         color: str,
         remove_background: bool,
+        prominence: float,
     ) -> go.Scatter:
         mask = (nucleotides > boundaries[0]) & (nucleotides < boundaries[1])
         nucleotides = nucleotides[mask].copy()
         trace = trace[mask].copy()
         if remove_background:
-            background_min = (np.abs(nucleotides - boundaries[0])).argmin()
-            background_max = (np.abs(nucleotides - boundaries[1])).argmin()
-            slope = (trace[background_max] - trace[background_min]) / (
-                nucleotides[background_max] - nucleotides[background_min]
-            )
-            inter = trace[background_max] - slope * nucleotides[background_max]
-            background_line = list(slope * nucleotides + inter)
+            base = trace.max() - prominence
+            background_line = [base] * len(trace)
         else:
             background_line = [0] * len(trace)
         y = background_line + trace[::-1].tolist()
         x = nucleotides.tolist() + nucleotides[::-1].tolist()
-        return go.Scatter(
-            x=x,
-            y=y,
-            fill="toself",
-            mode="lines",
-            line_color=color,
-            line_width=0,
-            showlegend=False,
-        )
+        return [
+            go.Scatter(
+                x=x,
+                y=y,
+                fill="toself",
+                mode="lines",
+                fillcolor=color.format(opacity=0.35),
+                line_width=0,
+                showlegend=False,
+            ),
+            go.Scatter(
+                x=nucleotides,
+                y=background_line,
+                mode="lines",
+                line=dict(color=color.format(opacity=0.75), dash="dash", width=3),
+                showlegend=False,
+            ),
+        ]
 
     @staticmethod
     def _add_line_with_std(
