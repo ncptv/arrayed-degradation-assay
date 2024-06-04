@@ -2,13 +2,13 @@ import numpy as np
 import pytest
 from pytest import approx
 
-from inceptive.wetlab.analyzers.arrayed_degradation.input_data import EPG
-from inceptive.wetlab.analyzers.arrayed_degradation.peaks import (
+from arrayed_degradation.input_data import EPG
+from arrayed_degradation.peaks import (
     compute_peak_bounds,
     get_peak_area,
     normalize_trace_wrt_control,
 )
-from inceptive.wetlab.analyzers.arrayed_degradation.tests.utils import gaussian_pdf
+from arrayed_degradation.tests.utils import gaussian_pdf
 
 
 @pytest.fixture

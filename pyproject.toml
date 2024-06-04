@@ -32,4 +32,7 @@ dev-dependencies = []
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/arrayed_degradation_assay"]
+packages = ["src/arrayed_degradation"]
+
+[project.scripts]
+arrayed_degradation = "arrayed_degradation.analyze_experiment:main"
