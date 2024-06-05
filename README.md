@@ -23,7 +23,7 @@ data
 You can run it by executing:
 
 ```sh
-python arrayed_degradation/analyze_experiment.py --min_peak 600 --max_peak 2500 --data_dir_path data 
+arrayed_degradation --min_peak 600 --max_peak 2500 --data_dir_path data 
 ```
 
 This will create two new output files under `data`: `result.csv` containing half life estimates and statistics, and `results.pdf`, containing diagnostic plots and summary statistics.
@@ -39,25 +39,14 @@ Continue reading below for detailed instructions on how to use for specific use-
 pip install arrayed-degradation-assay==0.1.0
 ```
 
-#### Install the python requirements
-
-This script requires several standard computational libraries like `numpy`, `pandas`, `sklearn` and `scipy`, as well as `plotly` and `PIL` for visualizations. You will find all of them in `requirements.txt` file.
-
-In order to install them enter into a directory with your code and install it via pip. Here are commands to do that:
-
-```sh
-cd arrayed-degradation-assay
-pip install -e .
-```
-
 ### Running the analysis
 
-The main script responsible for running analysis is located in `arrayed_degradation/analyze_experiment.py`.
+The main script responsible for running analysis is located in `src/arrayed_degradation/analyze_experiment.py`. Alternatively, you can also run script `arrayed_degradation`.
 
 In order to list all arguments along with description just run:
 
 ```sh
-python arrayed_degradation/analyze_experiment.py --help
+arrayed_degradation --help
 ```
 
 #### Arguments
@@ -84,7 +73,7 @@ Optional arguments:
 #### Example 1 - simple run without control peak and target peak between 1500 and 2000 nts
 
 ```sh
-python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1500 --max_peak 2000 --disable_control_peak
+arrayed_degradation --data_dir_path data --min_peak 1500 --max_peak 2000 --disable_control_peak
 ```
 
 With the command above you will run the analysis; the script will search for the input data within the `data` folder (that is a relative path to the directory with the data; but you can also provide absolute path as well); the target peak will be searched for within the **1500 - 2000** nucleotides window on electropherograms. The script **will not use a control peak** for normalization.
@@ -92,7 +81,7 @@ With the command above you will run the analysis; the script will search for the
 #### Example 2 - run with (1) control peak, (2) target peak background removal and (3) narrower peaks
 
 ```sh
-python arrayed_degradation/analyze_experiment.py --data_dir_path data --min_peak 1500 --max_peak 2000 --remove_background --rel_height 0.7
+arrayed_degradation --data_dir_path data --min_peak 1500 --max_peak 2000 --remove_background --rel_height 0.7
 ```
 
 The difference between this and _Example 1_ is that now script will search for control peak and normalize electropherograms traces with respect to them. Peak bounds are not provided so the script will use the default bounds (235, 310) for the control sequence. Additionally, the script will remove backgroud from the target peak by drawing a line at base of the peak (keep in mind that it might not work well for certain cases like migrating peaks, so use this argument with caution and double check if areas are correctly determined in results.pdf). Finally, the script will try to make peaks bounds more narrow due to decreasing `rel_height` from the default of 0.85 to 0.7.
