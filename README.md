@@ -36,7 +36,7 @@ Continue reading below for detailed instructions on how to use for specific use-
 ### Installation
 
 ```
-pip install arrayed-degradation-assay==0.1.0
+pip install arrayed-degradation-assay
 ```
 
 ### Running the analysis
