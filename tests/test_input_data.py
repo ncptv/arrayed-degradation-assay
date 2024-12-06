@@ -7,14 +7,14 @@ import pandas as pd
 import pytest
 from pytest import approx
 
-from inceptive.wetlab.analyzers.arrayed_degradation.exceptions import EPGError
-from inceptive.wetlab.analyzers.arrayed_degradation.input_data import (
+from arrayed_degradation.exceptions import EPGError
+from arrayed_degradation.input_data import (
     EPG,
     process_epgs,
     process_input_data,
     process_plate_map,
 )
-from inceptive.wetlab.analyzers.arrayed_degradation.tests.utils import (
+from arrayed_degradation.tests.utils import (
     create_input_data,
 )
 

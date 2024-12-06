@@ -65,7 +65,7 @@ def process_plate_map(plate_map: pd.DataFrame, time_unit: str) -> pd.DataFrame:
 
     # unpivot plate map
     plate_map = (
-        plate_map.stack(dropna=False).reset_index().rename(columns={0: "sample_id"})
+        plate_map.stack(dropna=False, future_stack=False).reset_index().rename(columns={0: "sample_id"})
     )
     plate_map["well"] = plate_map["row"] + plate_map["column"].astype(str)
 

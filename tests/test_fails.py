@@ -1,6 +1,6 @@
 import pandas as pd
 
-from inceptive.wetlab.analyzers.arrayed_degradation.fails import (
+from arrayed_degradation.fails import (
     fail_replicates_with_failed_tp0,
     fail_replicates_with_single_good_trace,
     fail_samples,
