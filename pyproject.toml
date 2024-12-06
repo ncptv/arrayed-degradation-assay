@@ -9,7 +9,7 @@ dependencies = [
     "Pillow==9.5.*",
     "kaleido==0.2.1",
     "numpy==1.23.*",
-    "pandas<=2.0.3",
+    "pandas>=2.0.3",
     "pathy==0.10.*",
     "plotly==5.14.*",
     "scikit-learn==1.2.*",
