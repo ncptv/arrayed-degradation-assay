@@ -41,7 +41,7 @@ TO_IGNORE_COLUMNS = ["epg_raw", "epg_clean", "epg_normed"]
 def calculate_per_replicate_half_life(data: pd.DataFrame) -> pd.DataFrame:
     data = data.copy()
     data = data.loc[data["fraction_remaining"].notna()]
-    per_replicate_results = data.groupby(["rna_id", "replicate"]).apply(
+    per_replicate_results = data.groupby(["rna_id", "replicate"])[["timepoint", "fraction_remaining"]].apply(
         lambda x: fit_decay_curve(x["timepoint"], x["fraction_remaining"])
     )
     return pd.DataFrame(
@@ -82,8 +82,8 @@ def calculate_coef_of_corr(
     per_replicate_results: pd.DataFrame, column: str
 ) -> dict[str, float]:
     return (
-        per_replicate_results.groupby("rna_id")
-        .apply(lambda x: x[column].std() / x[column].mean())
+        per_replicate_results.groupby("rna_id")[column]
+        .apply(lambda x: x.std() / x.mean())
         .to_dict()
     )
 

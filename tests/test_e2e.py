@@ -4,10 +4,10 @@ from tempfile import TemporaryDirectory
 import pandas as pd
 from pytest import approx
 
-from inceptive.wetlab.analyzers.arrayed_degradation.analyze_experiment import (
+from arrayed_degradation.analyze_experiment import (
     analyze_experiment,
 )
-from inceptive.wetlab.analyzers.arrayed_degradation.tests.utils import (
+from arrayed_degradation.tests.utils import (
     create_input_data,
 )
 
