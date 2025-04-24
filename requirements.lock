@@ -7,6 +7,7 @@
 #   all-features: false
 #   with-sources: false
 #   generate-hashes: false
+#   universal: false
 
 -e file:.
 click==8.1.7
@@ -19,14 +20,14 @@ markdown-it-py==3.0.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
-numpy==1.23.5
+numpy==2.2.5
     # via arrayed-degradation-assay
     # via pandas
     # via scikit-learn
     # via scipy
 packaging==24.0
     # via plotly
-pandas==2.0.3
+pandas==2.2.3
     # via arrayed-degradation-assay
 pathy==0.10.1
     # via arrayed-degradation-assay
@@ -42,9 +43,9 @@ pytz==2024.1
     # via pandas
 rich==13.7.1
     # via typer
-scikit-learn==1.2.2
+scikit-learn==1.6.1
     # via arrayed-degradation-assay
-scipy==1.11.1
+scipy==1.15.2
     # via arrayed-degradation-assay
     # via scikit-learn
 shellingham==1.5.4
